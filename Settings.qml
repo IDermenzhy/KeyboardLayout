@@ -3,10 +3,23 @@ import qs.Common
 import qs.Services
 import qs.Widgets
 import qs.Modules.Plugins
+import qs.Modules.Settings.Widgets
 
 PluginSettings {
     id: root
     pluginId: "keyboardLayoutOSD"
+
+    function resetToDefaults() {
+        // Stop the color pickers from saving the theme's current color back as a fixed override
+        backgroundColorSetting.isInitialized = false;
+        textColorSetting.isInitialized = false;
+        fontRow.currentValue = "Default"; // the dropdown drops its binding once a font is picked
+        const all = JSON.parse(JSON.stringify(SettingsData.pluginSettings));
+        all[root.pluginId] = { enabled: all[root.pluginId]?.enabled ?? true };
+        SettingsData.pluginSettings = all;
+        SettingsData.savePluginSettings();
+        PluginService.pluginDataChanged(root.pluginId);
+    }
 
     SelectionSetting {
         settingKey: "position"
@@ -23,6 +36,13 @@ PluginSettings {
             { label: "Bottom right", value: "bottomRight" }
         ]
         defaultValue: "center"
+    }
+
+    ToggleSetting {
+        settingKey: "shortName"
+        label: "Short layout code"
+        description: "Show RU instead of Russian"
+        defaultValue: false
     }
 
     SliderSetting {
@@ -53,6 +73,7 @@ PluginSettings {
     }
 
     ColorSetting {
+        id: backgroundColorSetting
         settingKey: "backgroundColor"
         label: "Background color"
         defaultValue: Theme.surfaceContainer
@@ -67,12 +88,14 @@ PluginSettings {
         unit: "%"
     }
 
-    StringSetting {
-        settingKey: "fontFamily"
-        label: "Font family"
-        description: "Leave empty to use the DMS font"
-        defaultValue: ""
-        placeholder: Theme.fontFamily
+    // No settingKey here: on this row it would register in DMS's own settings search
+    SettingsFontDropdownRow {
+        id: fontRow
+        width: parent.width
+        text: "Font family"
+        description: "Default follows the DMS font"
+        currentFont: SettingsData.getPluginSetting(root.pluginId, "fontFamily", "")
+        onFontSelected: family => root.saveValue("fontFamily", family)
     }
 
     SliderSetting {
@@ -85,6 +108,7 @@ PluginSettings {
     }
 
     ColorSetting {
+        id: textColorSetting
         settingKey: "textColor"
         label: "Text color"
         defaultValue: Theme.surfaceText
@@ -95,5 +119,12 @@ PluginSettings {
         text: "Preview layout popup"
         iconName: "visibility"
         onClicked: PluginService.pluginDaemonInstances[root.pluginId]?.preview()
+    }
+
+    DankButton {
+        width: parent.width
+        text: "Reset to defaults"
+        iconName: "restart_alt"
+        onClicked: root.resetToDefaults()
     }
 }
