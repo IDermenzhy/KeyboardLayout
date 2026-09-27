@@ -1,0 +1,14 @@
+{
+  "id": "keyboardLayoutOSD",
+  "name": "Keyboard Layout OSD",
+  "description": "Customizable popup when niri switches keyboard layouts",
+  "version": "1.0.0",
+  "author": "Ivan",
+  "icon": "keyboard",
+  "type": "daemon",
+  "capabilities": ["daemon"],
+  "component": "./KeyboardLayoutOSD.qml",
+  "settings": "./Settings.qml",
+  "requires_dms": ">=1.6.0",
+  "permissions": ["settings_read", "settings_write"]
+}
